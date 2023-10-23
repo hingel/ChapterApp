@@ -19,7 +19,6 @@ do
 {
 	Console.WriteLine($"Current Chapter: {currentChapter.ChapterId}.");
 
-	//Facktorisera detta nedan:
 	if (currentChapter.Links.Count < 1)
 	{
 		Console.WriteLine("Enter possible ways forward, separate by ','.");
@@ -39,7 +38,6 @@ do
 		dbContext.SaveChanges(); //Behövs denna?
 	}
 
-	//Med detta:
 	Console.WriteLine($"Where do you want to continue to? {currentChapter}");
 	int toGoTo = Services.Extensions.InputCheck().First();
 
@@ -47,20 +45,8 @@ do
 		break;
 
 	AddLinkToChapter(currentChapter, toGoTo);
-
-	////Om den aktuella sökvägen inte finns i kapitlet men att den finns i databasen
-	//if (currentChapter.Links.All(c => c.LinkId != toGoTo) && dbContext.Links.Any(c => c.LinkId == toGoTo))
-	//{
-	//	//lägg till barnet till aktuellt kapitel
-	//	currentChapter.Links.Add(dbContext.Links.First(c => c.LinkId == toGoTo));
-	//}
-	////annars om länken inte finns alls. Då skapa ett nytt och lägg till det till kapitlet
-	//else if (dbContext.Links.All(c => c.LinkId != toGoTo))
-	//{
-	//	currentChapter.Links.Add(new ChapterLink { LinkId = toGoTo });
-	//}
-
-	//Sen sätta det ny akapitlet.
+	
+	//Sen sätta det nya kapitlet.
 	currentChapter = dbContext.Chapters.Include(c => c.Links).FirstOrDefault(c => c.ChapterId == toGoTo);
 	currentChapter ??= new Chapter { ChapterId = toGoTo };
 	 
