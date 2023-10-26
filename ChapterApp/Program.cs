@@ -1,6 +1,9 @@
 ﻿using ChapterApp.Models;
 using DataAccess;
 using Microsoft.EntityFrameworkCore;
+using Services;
+
+var chapters = await JsonDataAccess.ReadData<Chapter>("chapters.json");
 
 var dbContext = new ApplicationDbContext();
 
@@ -12,6 +15,7 @@ var chapterNrList = new List<int>();
 
 var chapterNr = Console.ReadLine();
 var currentChapter = dbContext.Chapters.Include(c => c.Links).FirstOrDefault(c => c.ChapterId == int.Parse(chapterNr));
+
 currentChapter ??= new Chapter {ChapterId = int.Parse(chapterNr) };
 chapterNrList.Add(currentChapter.ChapterId);
 
@@ -22,7 +26,7 @@ do
 	if (currentChapter.Links.Count < 1)
 	{
 		Console.WriteLine("Enter possible ways forward, separate by ','.");
-		var linksToAdd = Services.Extensions.InputCheck();
+		var linksToAdd = Extensions.InputCheck();
 
 		if (linksToAdd[0] == 0)
 			break;
@@ -39,23 +43,25 @@ do
 	}
 
 	Console.WriteLine($"Where do you want to continue to? {currentChapter}");
-	int toGoTo = Services.Extensions.InputCheck().First();
-
-	if (toGoTo == 0)
+	var toGoto = Extensions.InputCheck().First();
+	if (toGoto == 0)
 		break;
 
-	AddLinkToChapter(currentChapter, toGoTo);
+	AddLinkToChapter(currentChapter, toGoto);
 	
 	//Sen sätta det nya kapitlet.
-	currentChapter = dbContext.Chapters.Include(c => c.Links).FirstOrDefault(c => c.ChapterId == toGoTo);
-	currentChapter ??= new Chapter { ChapterId = toGoTo };
+	currentChapter = dbContext.Chapters.Include(c => c.Links).FirstOrDefault(c => c.ChapterId == toGoto);
+	currentChapter ??= new Chapter { ChapterId = toGoto };
 	 
 	dbContext.SaveChanges();
 
 	chapterNrList.Add(currentChapter.ChapterId);
-	Services.Extensions.PrintChapterList(chapterNrList);
+	Extensions.PrintChapterList(chapterNrList);
 
-} while (true); //Hitta något annat sätt att göra detta.
+} while (true);
+
+
+await JsonDataAccess.PrintData(dbContext.Chapters.Include(c => c.Links), "chapter.json");
 
 void AddLinkToChapter(Chapter chapter, int i)
 {
@@ -69,6 +75,3 @@ void AddLinkToChapter(Chapter chapter, int i)
 		chapter.Links.Add(new ChapterLink { LinkId = i });
 	}
 }
-
-
-

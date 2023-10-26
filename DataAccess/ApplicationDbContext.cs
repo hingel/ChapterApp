@@ -28,6 +28,5 @@ public class ApplicationDbContext : DbContext
 
 		modelBuilder.Entity<ChapterLink>().HasKey(x => x.LinkId);
 		modelBuilder.Entity<ChapterLink>(c => c.Property(ch => ch.LinkId).ValueGeneratedNever());
-		//modelBuilder.Entity<Child>(ch => ch.Property(p => p.ParentsChapters).IsRequired());
 	}
 }
