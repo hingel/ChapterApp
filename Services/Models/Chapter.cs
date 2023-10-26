@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace ChapterApp.Models;
+﻿namespace ChapterApp.Models;
 
 public class Chapter
 {
@@ -20,5 +18,4 @@ public class Chapter
 public class ChapterLink
 {
 	public int LinkId { get; set; } //Detta id är kapitel.
-	public virtual ICollection<Chapter> ParentsChapters { get; set; } = new HashSet<Chapter>();
 }
