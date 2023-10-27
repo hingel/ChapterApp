@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using ChapterApp.Models;
 
 namespace Services;
 
@@ -21,7 +20,6 @@ public static class JsonDataAccess
 		var jsonString = JsonSerializer.Serialize(data, jsOptions);
 		await sw.WriteLineAsync(jsonString);
 	}
-
 
 	public static async Task<List<T>> ReadData<T>(string fileName)
 	{
