@@ -9,14 +9,14 @@ var dbContext = new ApplicationDbContext();
 
 //Skapa en migrering om det inte finns en databas, automatiskt.
 
-Console.WriteLine("Enter a Chapter nr:");
+Console.WriteLine("Enter a Chapter nr to start at:");
 
 var chapterNrList = new List<int>();
 
-var chapterNr = Console.ReadLine();
-var currentChapter = dbContext.Chapters.Include(c => c.Links).FirstOrDefault(c => c.ChapterId == int.Parse(chapterNr));
+var chapterNr = Extensions.InputCheck(0).First();
+var currentChapter = dbContext.Chapters.Include(c => c.Links).FirstOrDefault(c => c.ChapterId == chapterNr);
 
-currentChapter ??= new Chapter {ChapterId = int.Parse(chapterNr) };
+currentChapter ??= new Chapter {ChapterId = chapterNr};
 chapterNrList.Add(currentChapter.ChapterId);
 
 do
@@ -26,7 +26,7 @@ do
 	if (currentChapter.Links.Count < 1)
 	{
 		Console.WriteLine("Enter possible ways forward, separate by ','.");
-		var linksToAdd = Extensions.InputCheck();
+		var linksToAdd = Extensions.InputCheck(currentChapter.ChapterId);
 
 		if (linksToAdd[0] == 0)
 			break;
@@ -39,11 +39,11 @@ do
 		if (!dbContext.Chapters.Any(c => c.ChapterId == currentChapter.ChapterId))
 			dbContext.Chapters.Add(currentChapter);
 
-		dbContext.SaveChanges(); //Behövs denna?
+		dbContext.SaveChanges(); //Behövs denna ,testa att flytta till slutet?
 	}
 
 	Console.WriteLine($"Where do you want to continue to? {currentChapter}");
-	var toGoto = Extensions.InputCheck().First();
+	var toGoto = Extensions.InputCheck(currentChapter.ChapterId).First();
 	if (toGoto == 0)
 		break;
 

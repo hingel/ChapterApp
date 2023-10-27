@@ -8,7 +8,7 @@ public static class Extensions
 		Console.WriteLine("Current path:");
 
 		Console.Write(list[0]);
-		for (int i = 1; i < list.Count; i++)
+		for (var i = 1; i < list.Count; i++)
 		{
 			Console.Write(" -> " + list[i]);
 		}
@@ -16,16 +16,27 @@ public static class Extensions
 		Console.WriteLine();
 	}
 
-	public static int[] InputCheck()
+	public static int[] InputCheck(int notValidInt)
 	{
 		var stringArr = Console.ReadLine().Replace(" ", "").Split(',').ToArray();
 		var intArr = new List<int>();
 
 		foreach (var s in stringArr)
 		{
-			if (int.TryParse(s, out var testInt))
+			var checkResult = true;
+
+			while (!checkResult)
 			{
-				intArr.Add(testInt);
+				checkResult = !int.TryParse(s, out var testInt);
+
+				if (checkResult && notValidInt != testInt)
+					intArr.Add(testInt);
+
+				else
+				{
+					Console.WriteLine("Enter a valid number");
+					checkResult = false;
+				}
 			}
 		}
 
