@@ -23,20 +23,19 @@ public static class Extensions
 
 		foreach (var s in stringArr)
 		{
-			var checkResult = true;
+			bool loop = true;
 
-			while (!checkResult)
+			while (loop)
 			{
-				checkResult = !int.TryParse(s, out var testInt);
+				loop = int.TryParse(s, out var testInt);
 
-				if (checkResult && notValidInt != testInt)
-					intArr.Add(testInt);
-
-				else
+				if (loop && notValidInt != testInt)
 				{
-					Console.WriteLine("Enter a valid number");
-					checkResult = false;
+					intArr.Add(testInt);
+					break;
 				}
+				
+				Console.WriteLine("Enter a valid number");
 			}
 		}
 
