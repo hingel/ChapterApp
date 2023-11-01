@@ -9,10 +9,9 @@ public class ChapterTracker
 	private readonly ApplicationDbContext _dbContext;
 	private readonly PrintTree _print;
 
-	public ChapterTracker(ApplicationDbContext dbContext, PrintTree print)
+	public ChapterTracker(ApplicationDbContext dbContext)
 	{
 		_dbContext = dbContext;
-		_print = print;
 	}
 
 	public async Task RunChapterTracker()
