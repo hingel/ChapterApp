@@ -1,4 +1,5 @@
-﻿using ChapterApp.Models;
+﻿using System.Collections.Immutable;
+using ChapterApp.Models;
 using DataAccess;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
@@ -12,115 +13,111 @@ public class PrintTree
 	public PrintTree(ApplicationDbContext dbContext)
 	{
 		_dbContext = dbContext;
+
+		MaxValue = _dbContext.Links.Count() - 1;
+		PrintArray = new string[MaxValue, MaxValue + 2]; //Första siffran är rad, Andra siffran är kolumn.
 	}
+
+	public string[,] PrintArray { get; private set; }
+	public int CurrentRow { get; private set; } = 0;
+	public int CurrentColumn { get; private set; } = 0;
+	public HashSet<int> PrintedChapters { get; } = new();
+	public int MaxValue { get; private set; }
 
 	public async Task PrintTreeMethod()
 	{
-		var maxValue = _dbContext.Chapters.Count();
+		var sideSteps = 0;
 
-		var printArray = new string[maxValue,maxValue + 2]; //Första siffran är rad, Andra siffran är kolumn.
+		var bottomChapter = await _dbContext.Chapters.Include(c => c.Links).FirstOrDefaultAsync();
+		if (bottomChapter == null) return;
 
-		//Hela detta ska läggas i en while loop
-
+		//1. Först leta längst ner i trädet. Ta alltid första svaret. eller om det är samma tal som ett redan funnit nummer ta nästa
+		bottomChapter = await FindBottomLeftChapter(bottomChapter.Links.First().LinkId);
 		
-		var currentChapter = await _dbContext.Chapters.Include(c => c.Links).FirstOrDefaultAsync();
-
-		var currentRow = 1;
-		var currentColumn = maxValue / 2;
-
-		printArray[currentRow - 1, currentColumn] = currentChapter.ChapterId.ToString(); //Sätter 1 i mitten.
-
-		while (true)
+		if (bottomChapter == null)
+			return;
+		
+		while (PrintedChapters.Count <= MaxValue)
 		{
+			if (!PrintedChapters.Contains(bottomChapter.ChapterId))
+				AddChapterToArray(bottomChapter, CurrentRow - 2, CurrentColumn + bottomChapter.Links.Count > 2 ? 2 : 1);
 
-			if (currentChapter == null || !currentChapter.Links.Any()) break;
-
-			//Leta upp underliggande kapitel 
-			//var childChapters =
-			//	_dbContext.Chapters.Include(c => c.Links)
-			//		.Where(c => currentChapter.Links.Select(l => l.LinkId).Contains(c.ChapterId));
-
-			//skicka de nya kapitlen, och arrayen till en extern metod som returnerar arrayen,
-			//och det på något sätt vilket det nya aktuella kapitlet är.
-
-			//vill skriva ut första kapitlet
-			//currentChapter = childChapters.First();
-
-
-			//Första siffran är rad, Andra siffran är kolumn.
-
-
-			switch (currentChapter.Links.Count)
+			foreach (var link in bottomChapter.Links)
 			{
-				case 1:
-				{
-					printArray[currentRow, currentColumn] = " | ";
-					printArray[currentRow + 1 , currentColumn] = currentChapter.Links.First().LinkId.ToString();
-					break;
-				}
-				case 2:
-				{
-					printArray[currentRow, currentColumn - 1] = " / ";
-					printArray[currentRow + 1, currentColumn - 1] = currentChapter.Links.ElementAt(0).LinkId.ToString();
-					printArray[currentRow, currentColumn + 1] = " \\ ";
-					printArray[currentRow + 1, currentColumn + 1] = currentChapter.Links.ElementAt(1).LinkId.ToString();
-					currentColumn -= 1;
-						break;
-				}
-				case 3:
-				{
-					printArray[currentRow, currentColumn - 1] = " / ";
-					printArray[currentRow + 1, currentColumn - 1] = currentChapter.Links.ElementAt(0).LinkId.ToString();
-					printArray[currentRow, currentColumn] = "|";
-					printArray[currentRow + 1, currentColumn] = currentChapter.Links.ElementAt(1).LinkId.ToString();
-					printArray[currentRow, currentColumn + 1] = " \\ ";
-					printArray[currentRow + 1, currentColumn + 1] = currentChapter.Links.ElementAt(2).LinkId.ToString();
-					currentColumn -= 1;
-					break;
-				}
-				default: break;
+				if (PrintedChapters.Contains(link.LinkId))
+					continue;
+
+				bottomChapter = await FindBottomLeftChapter(link.LinkId);
+				AddChapterToArray(bottomChapter, CurrentRow - 2, CurrentColumn + bottomChapter.Links.Count > 2 ? 2 : 1);
+				break;
 			}
 
-			currentRow += 1;
-			
-			var resultTuple = FindNextCurrentChapter(printArray, currentRow);
-			currentRow = resultTuple.Item1 + 1;
-			currentColumn = resultTuple.Item2;
-			currentChapter = resultTuple.Item3;
-
-
-			//Här ska det sättas en ny variabel eller liknande istället.
-			if (currentChapter == null)
-				break;
+			bottomChapter = await _dbContext.Chapters.Include(c => c.Links)
+				.FirstOrDefaultAsync(c => c.Links.Any(l => l.LinkId.Equals(bottomChapter.ChapterId)));
 		}
 
-		await ConsolePrint(printArray);
+		await ConsolePrint(PrintArray);
 	}
 
-	private (int, int, Chapter?) FindNextCurrentChapter(string[,] printArray, int currentRow)
+	private void AddChapterToArray(Chapter currentChapter, int row, int column)
 	{
-		var currentcolumn = 0;
-		var stringToFind = string.Empty;
+		PrintedChapters.Add(currentChapter.ChapterId);
 
-		for (currentcolumn = 0; currentcolumn < printArray.Length - 2; currentcolumn++)
+		switch (currentChapter.Links.Count)
 		{
-			stringToFind = printArray[currentRow, currentcolumn]; //Hitta den första siffran i raden
-			if (!string.IsNullOrEmpty(stringToFind)) break;
+			case 1:
+			{
+				PrintArray[row, column] = " | ";
+				PrintArray[row + 1, column] = currentChapter.Links.First().LinkId.ToString();
+				break;	   
+			}			   
+			case 2:		   
+			{			   
+				PrintArray[row, column - 1] = " / ";
+				PrintArray[row + 1, column - 1] = currentChapter.Links.ElementAt(0).LinkId.ToString();
+				PrintArray[row, column + 1] = " \\ ";
+				PrintArray[row + 1, column + 1] = currentChapter.Links.ElementAt(1).LinkId.ToString();
+				break;
+			}
+			case 3:
+			{
+				PrintArray[row, column - 1] = " / ";
+				PrintArray[row + 1, column - 1] = currentChapter.Links.ElementAt(0).LinkId.ToString();
+				PrintArray[row, column] = "|";
+				PrintArray[row + 1, column] = currentChapter.Links.ElementAt(1).LinkId.ToString();
+				PrintArray[row, column + 1] = " \\ ";
+				PrintArray[row + 1, column + 1] = currentChapter.Links.ElementAt(2).LinkId.ToString();
+				break;
+			}
+			default: break;
 		}
-		
-		(int currentRow, int currentColumn, Chapter?) resultTuple = (currentRow, currentcolumn, _dbContext.Chapters.Include(c => c.Links).FirstOrDefault(c => c.ChapterId == int.Parse(stringToFind)));
+	}
 
-		if (resultTuple.Item3.ChapterId == 1)
-			resultTuple.Item3 = null;
+	private async Task<Chapter?> FindBottomLeftChapter(int chapterId)
+	{
+		var chapter = await _dbContext.Chapters.Include(c => c.Links).FirstOrDefaultAsync(c => c.ChapterId == chapterId);
 
-		return resultTuple;
+		while (chapter != null)
+		{
+			var nextChapter = await _dbContext.Chapters.Include(c => c.Links)
+					.FirstOrDefaultAsync(c => c.ChapterId == chapter.Links.First().LinkId);
+			
+			if (nextChapter == null || PrintedChapters.Contains(nextChapter.ChapterId) || !nextChapter.Links.Any())
+			{
+				PrintedChapters.Add(chapter.Links.First().LinkId);
+				return chapter;
+			}
+
+			CurrentRow += 2;
+			chapter = nextChapter;
+		}
+
+		return null;
 	}
 
 	private async Task ConsolePrint(string[,] printArray)
 	{
 		Console.Clear();
-
-		//TODO: kan köra med set cursor position istället. Spelar inte så stor roll.
 
 		for (int i = 0; i < printArray.GetLength(0); i++)
 		{
