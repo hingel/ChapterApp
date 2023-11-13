@@ -67,7 +67,7 @@ public class PrintTree
 
 		//Beroende på antal länkar ska den gå till vänster och höger också.
 		if (chapter.Links.Count != 1)
-			CurrentColumn -= 1;
+			CurrentColumn -= 2;
 
 		while (chapter != null)
 		{
@@ -82,7 +82,7 @@ public class PrintTree
 
 			CurrentRow += 2;
 			if (chapter.Links.Count != 1)
-				CurrentColumn -= 1;
+				CurrentColumn -= 2;
 
 			chapter = nextChapter;
 		}
@@ -94,10 +94,8 @@ public class PrintTree
 	{
 		PrintedChapters.Add(currentChapter.ChapterId);
 
-		//TODO: den skriver aldrig ut det kapitlet som man är på i nuläget, vilket måste läggas till.
-
 		if (CurrentColumn <= 0)
-			CurrentColumn = 1;
+			CurrentColumn = 2;
 
 		Console.Clear();
 		Console.WriteLine($"Column: {CurrentColumn}, Row: {CurrentRow}");
@@ -106,30 +104,35 @@ public class PrintTree
 		{
 			case 1:
 			{
-				PrintArray[CurrentRow, CurrentColumn] = " | ";
-				PrintArray[CurrentRow + 1, CurrentColumn] = currentChapter.Links.First().LinkId.ToString();
+				PrintArray[CurrentRow, CurrentColumn] = $" {currentChapter.ChapterId} ";
+				PrintArray[CurrentRow + 1 , CurrentColumn] = " | ";
+				PrintArray[CurrentRow + 2, CurrentColumn] = currentChapter.Links.First().LinkId.ToString();
 				break;	   
 			}			   
 			case 2:		   
-			{			   
-				PrintArray[CurrentRow, CurrentColumn - 1] = " / ";
-				PrintArray[CurrentRow + 1, CurrentColumn - 1] = currentChapter.Links.ElementAt(0).LinkId.ToString();
-				PrintArray[CurrentRow, CurrentColumn + 1] = " \\ ";
-				PrintArray[CurrentRow + 1, CurrentColumn + 1] = currentChapter.Links.ElementAt(1).LinkId.ToString();
+			{
+				PrintArray[CurrentRow, CurrentColumn] = $" {currentChapter.ChapterId} ";
+				PrintArray[CurrentRow + 1, CurrentColumn - 1] = " / ";
+				PrintArray[CurrentRow + 2, CurrentColumn - 2] = $" {currentChapter.Links.ElementAt(0).LinkId.ToString()} ";
+				PrintArray[CurrentRow + 1, CurrentColumn + 1] = " \\ ";
+				PrintArray[CurrentRow + 2, CurrentColumn + 2] = $" {currentChapter.Links.ElementAt(1).LinkId.ToString()} ";
 				break;
 			}
 			case 3:
 			{
-				PrintArray[CurrentRow, CurrentColumn - 1] = " / ";
-				PrintArray[CurrentRow + 1, CurrentColumn - 1] = currentChapter.Links.ElementAt(0).LinkId.ToString();
-				PrintArray[CurrentRow, CurrentColumn] = "|";
-				PrintArray[CurrentRow + 1, CurrentColumn] = currentChapter.Links.ElementAt(1).LinkId.ToString();
-				PrintArray[CurrentRow, CurrentColumn + 1] = " \\ ";
-				PrintArray[CurrentRow + 1, CurrentColumn + 1] = currentChapter.Links.ElementAt(2).LinkId.ToString();
+				PrintArray[CurrentRow, CurrentColumn] = $" {currentChapter.ChapterId} ";
+				PrintArray[CurrentRow + 1, CurrentColumn - 1] = " / ";
+				PrintArray[CurrentRow + 2, CurrentColumn - 2] = $" {currentChapter.Links.ElementAt(0).LinkId.ToString()} ";
+				PrintArray[CurrentRow + 1, CurrentColumn] = "|";
+				PrintArray[CurrentRow + 2, CurrentColumn] = $" {currentChapter.Links.ElementAt(1).LinkId.ToString()} ";
+				PrintArray[CurrentRow + 1, CurrentColumn + 1] = " \\ ";
+				PrintArray[CurrentRow + 2, CurrentColumn + 2] = $" {currentChapter.Links.ElementAt(2).LinkId.ToString()} ";
 				break;
 			}
 			default: break;
 		}
+
+		ConsolePrint(PrintArray);
 	}
 	
 	private async Task ConsolePrint(string[,] printArray)
