@@ -32,7 +32,9 @@ public class PrintTree
 		
 		if (bottomChapter == null)
 			return;
-		
+
+		var extraRemove = 1;
+
 		while (PrintedChapters.Count <= MaxValue)
 		{
 			if (!PrintedChapters.Contains(bottomChapter.ChapterId))
@@ -41,7 +43,15 @@ public class PrintTree
 			foreach (var link in bottomChapter.Links)
 			{
 				if (PrintedChapters.Contains(link.LinkId))
+				{
+					if (bottomChapter.Links.Count != 1)
+					{
+						CurrentColumn += 2;
+						extraRemove = 2;
+					}
+
 					continue;
+				}
 				
 				bottomChapter = await FindBottomLeftChapter(link.LinkId);
 				AddChapterToArray(bottomChapter);
@@ -65,7 +75,7 @@ public class PrintTree
 		var chapter = await _dbContext.Chapters.Include(c => c.Links).FirstOrDefaultAsync(c => c.ChapterId == chapterId);
 		CurrentRow += 2;
 
-		//Beroende på antal länkar ska den gå till vänster och höger också.
+		//Beroende på antal länkar ska den gå till vänster.
 		if (chapter.Links.Count != 1)
 			CurrentColumn -= 2;
 
@@ -123,7 +133,7 @@ public class PrintTree
 				PrintArray[CurrentRow, CurrentColumn] = $" {currentChapter.ChapterId} ";
 				PrintArray[CurrentRow + 1, CurrentColumn - 1] = " / ";
 				PrintArray[CurrentRow + 2, CurrentColumn - 2] = $" {currentChapter.Links.ElementAt(0).LinkId.ToString()} ";
-				PrintArray[CurrentRow + 1, CurrentColumn] = "|";
+				PrintArray[CurrentRow + 1, CurrentColumn] = " | ";
 				PrintArray[CurrentRow + 2, CurrentColumn] = $" {currentChapter.Links.ElementAt(1).LinkId.ToString()} ";
 				PrintArray[CurrentRow + 1, CurrentColumn + 1] = " \\ ";
 				PrintArray[CurrentRow + 2, CurrentColumn + 2] = $" {currentChapter.Links.ElementAt(2).LinkId.ToString()} ";
