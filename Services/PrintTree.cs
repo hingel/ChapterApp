@@ -1,7 +1,5 @@
-﻿using System.Collections.Immutable;
-using ChapterApp.Models;
+﻿using ChapterApp.Models;
 using DataAccess;
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
 
 namespace Services;
@@ -15,7 +13,7 @@ public class PrintTree
 		_dbContext = dbContext;
 
 		MaxValue = _dbContext.Links.Count() - 1;
-		PrintArray = new string[MaxValue, MaxValue + 2]; //Första siffran är rad, Andra siffran är kolumn.
+		PrintArray = new string[MaxValue + 2, MaxValue + 4]; //Första siffran är rad, Andra siffran är kolumn.
 	}
 
 	public string[,] PrintArray { get; private set; }
@@ -26,8 +24,6 @@ public class PrintTree
 
 	public async Task PrintTreeMethod()
 	{
-		var sideSteps = 0;
-
 		var bottomChapter = await _dbContext.Chapters.Include(c => c.Links).FirstOrDefaultAsync();
 		if (bottomChapter == null) return;
 
@@ -40,68 +36,44 @@ public class PrintTree
 		while (PrintedChapters.Count <= MaxValue)
 		{
 			if (!PrintedChapters.Contains(bottomChapter.ChapterId))
-				AddChapterToArray(bottomChapter, CurrentRow - 2, CurrentColumn + bottomChapter.Links.Count > 2 ? 2 : 1);
+				AddChapterToArray(bottomChapter);
 
 			foreach (var link in bottomChapter.Links)
 			{
 				if (PrintedChapters.Contains(link.LinkId))
 					continue;
-
+				
 				bottomChapter = await FindBottomLeftChapter(link.LinkId);
-				AddChapterToArray(bottomChapter, CurrentRow - 2, CurrentColumn + bottomChapter.Links.Count > 2 ? 2 : 1);
+				AddChapterToArray(bottomChapter);
 				break;
 			}
 
 			bottomChapter = await _dbContext.Chapters.Include(c => c.Links)
 				.FirstOrDefaultAsync(c => c.Links.Any(l => l.LinkId.Equals(bottomChapter.ChapterId)));
+
+			if (bottomChapter.Links.Count != 1)
+				CurrentColumn += 1;
+
+			CurrentRow -= 2;
 		}
 
 		await ConsolePrint(PrintArray);
 	}
 
-	private void AddChapterToArray(Chapter currentChapter, int row, int column)
-	{
-		PrintedChapters.Add(currentChapter.ChapterId);
-
-		switch (currentChapter.Links.Count)
-		{
-			case 1:
-			{
-				PrintArray[row, column] = " | ";
-				PrintArray[row + 1, column] = currentChapter.Links.First().LinkId.ToString();
-				break;	   
-			}			   
-			case 2:		   
-			{			   
-				PrintArray[row, column - 1] = " / ";
-				PrintArray[row + 1, column - 1] = currentChapter.Links.ElementAt(0).LinkId.ToString();
-				PrintArray[row, column + 1] = " \\ ";
-				PrintArray[row + 1, column + 1] = currentChapter.Links.ElementAt(1).LinkId.ToString();
-				break;
-			}
-			case 3:
-			{
-				PrintArray[row, column - 1] = " / ";
-				PrintArray[row + 1, column - 1] = currentChapter.Links.ElementAt(0).LinkId.ToString();
-				PrintArray[row, column] = "|";
-				PrintArray[row + 1, column] = currentChapter.Links.ElementAt(1).LinkId.ToString();
-				PrintArray[row, column + 1] = " \\ ";
-				PrintArray[row + 1, column + 1] = currentChapter.Links.ElementAt(2).LinkId.ToString();
-				break;
-			}
-			default: break;
-		}
-	}
-
 	private async Task<Chapter?> FindBottomLeftChapter(int chapterId)
 	{
 		var chapter = await _dbContext.Chapters.Include(c => c.Links).FirstOrDefaultAsync(c => c.ChapterId == chapterId);
+		CurrentRow += 2;
+
+		//Beroende på antal länkar ska den gå till vänster och höger också.
+		if (chapter.Links.Count != 1)
+			CurrentColumn -= 1;
 
 		while (chapter != null)
 		{
 			var nextChapter = await _dbContext.Chapters.Include(c => c.Links)
-					.FirstOrDefaultAsync(c => c.ChapterId == chapter.Links.First().LinkId);
-			
+				.FirstOrDefaultAsync(c => c.ChapterId == chapter.Links.First().LinkId);
+
 			if (nextChapter == null || PrintedChapters.Contains(nextChapter.ChapterId) || !nextChapter.Links.Any())
 			{
 				PrintedChapters.Add(chapter.Links.First().LinkId);
@@ -109,12 +81,57 @@ public class PrintTree
 			}
 
 			CurrentRow += 2;
+			if (chapter.Links.Count != 1)
+				CurrentColumn -= 1;
+
 			chapter = nextChapter;
 		}
 
 		return null;
 	}
 
+	private void AddChapterToArray(Chapter currentChapter)
+	{
+		PrintedChapters.Add(currentChapter.ChapterId);
+
+		//TODO: den skriver aldrig ut det kapitlet som man är på i nuläget, vilket måste läggas till.
+
+		if (CurrentColumn <= 0)
+			CurrentColumn = 1;
+
+		Console.Clear();
+		Console.WriteLine($"Column: {CurrentColumn}, Row: {CurrentRow}");
+
+		switch (currentChapter.Links.Count)
+		{
+			case 1:
+			{
+				PrintArray[CurrentRow, CurrentColumn] = " | ";
+				PrintArray[CurrentRow + 1, CurrentColumn] = currentChapter.Links.First().LinkId.ToString();
+				break;	   
+			}			   
+			case 2:		   
+			{			   
+				PrintArray[CurrentRow, CurrentColumn - 1] = " / ";
+				PrintArray[CurrentRow + 1, CurrentColumn - 1] = currentChapter.Links.ElementAt(0).LinkId.ToString();
+				PrintArray[CurrentRow, CurrentColumn + 1] = " \\ ";
+				PrintArray[CurrentRow + 1, CurrentColumn + 1] = currentChapter.Links.ElementAt(1).LinkId.ToString();
+				break;
+			}
+			case 3:
+			{
+				PrintArray[CurrentRow, CurrentColumn - 1] = " / ";
+				PrintArray[CurrentRow + 1, CurrentColumn - 1] = currentChapter.Links.ElementAt(0).LinkId.ToString();
+				PrintArray[CurrentRow, CurrentColumn] = "|";
+				PrintArray[CurrentRow + 1, CurrentColumn] = currentChapter.Links.ElementAt(1).LinkId.ToString();
+				PrintArray[CurrentRow, CurrentColumn + 1] = " \\ ";
+				PrintArray[CurrentRow + 1, CurrentColumn + 1] = currentChapter.Links.ElementAt(2).LinkId.ToString();
+				break;
+			}
+			default: break;
+		}
+	}
+	
 	private async Task ConsolePrint(string[,] printArray)
 	{
 		Console.Clear();
