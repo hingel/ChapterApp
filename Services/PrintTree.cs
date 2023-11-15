@@ -25,27 +25,45 @@ public class PrintTree
 
 	public async Task PrintTreeMethod()
 	{
-		var bottomChapter = await _dbContext.Chapters.Include(c => c.Links).FirstOrDefaultAsync();
-		if (bottomChapter == null) return;
+		var currentChapter = await _dbContext.Chapters.Include(c => c.Links).FirstOrDefaultAsync();
+		if (currentChapter == null) return;
 
 		//1. Först leta längst ner i trädet. Ta alltid första svaret. eller om det är samma tal som ett redan funnit nummer ta nästa
-		bottomChapter = await FindBottomLeftChapter(bottomChapter.Links.First().LinkId);
+		currentChapter = await FindBottomLeftChapter(currentChapter.Links.First().LinkId); //skriva om till att gräva så långt ned som möjligt i alla kapitel kanske?
 		
-		if (bottomChapter == null)
+		if (currentChapter == null)
 			return;
 
 		while (PrintedChapters.Count <= MaxValue)
 		{
-			if (!PrintedChapters.Contains(bottomChapter.ChapterId))
-				AddChapterToArray(bottomChapter);
+			if (!PrintedChapters.Contains(currentChapter.ChapterId))
+				AddChapterToArray(currentChapter);
+			else
+			{
+				currentChapter = await _dbContext.Chapters.Include(c => c.Links)
+					.FirstOrDefaultAsync(c => c.Links.Any(l => l.LinkId.Equals(currentChapter.ChapterId)));
+
+				if (PrintedChapters.Contains(currentChapter.ChapterId))
+					FindPositionInArray(currentChapter);
+				else
+				{
+					if (currentChapter.Links.Count > 1)
+					{
+						CurrentColumn += 2;
+					}
+
+					CurrentRow -= 2;
+				}
+				continue;
+			}
 
 			var checkedNrOfLinks = false;
 			
-			foreach (var link in bottomChapter.Links)
+			foreach (var link in currentChapter.Links)
 			{
 				if (PrintedChapters.Contains(link.LinkId))
 				{
-					if (bottomChapter.Links.Count != 1 && !checkedNrOfLinks)
+					if (currentChapter.Links.Count != 1 && !checkedNrOfLinks)
 					{
 						checkedNrOfLinks = true;
 						CurrentColumn += 2;
@@ -54,18 +72,13 @@ public class PrintTree
 					continue;
 				}
 
-				bottomChapter = await FindBottomLeftChapter(link.LinkId);
-				AddChapterToArray(bottomChapter);
-				break;
+				if (_dbContext.Chapters.Any(c => c.ChapterId == link.LinkId))
+				{
+					currentChapter = await FindBottomLeftChapter(link.LinkId);
+					AddChapterToArray(currentChapter);
+					break;
+				}
 			}
-			
-			bottomChapter = await _dbContext.Chapters.Include(c => c.Links)
-				.FirstOrDefaultAsync(c => c.Links.Any(l => l.LinkId.Equals(bottomChapter.ChapterId)));
-
-			if (PrintedChapters.Contains(bottomChapter.ChapterId))
-				FindPositionInArray(bottomChapter);
-			else
-				CurrentRow -= 2;
 		}
 
 		await ConsolePrint(PrintArray);
@@ -74,14 +87,16 @@ public class PrintTree
 	private async Task<Chapter?> FindBottomLeftChapter(int chapterId)
 	{
 		var chapter = await _dbContext.Chapters.Include(c => c.Links).FirstOrDefaultAsync(c => c.ChapterId == chapterId);
+		
 		CurrentRow += 2;
 
 		//Beroende på antal länkar ska den gå till vänster.
-		if (chapter.Links.Count != 1)
-			CurrentColumn -= 2;
-
+		
 		while (chapter != null)
 		{
+			if (chapter.Links.Count != 1)
+				CurrentColumn -= 2;
+
 			var nextChapter = await _dbContext.Chapters.Include(c => c.Links)
 				.FirstOrDefaultAsync(c => c.ChapterId == chapter.Links.First().LinkId);
 
@@ -107,14 +122,11 @@ public class PrintTree
 		{
 			for (int j = 0; j < PrintArray.GetLength(1); j++)
 			{
-
-				Console.WriteLine(PrintArray[i, j]);
-
-				if (string.IsNullOrEmpty(PrintArray[i, j]) ? false : PrintArray[i, j].Contains(currentChapter.ChapterId.ToString()))
+				if (!string.IsNullOrEmpty(PrintArray[i, j]) && PrintArray[i, j].Contains(currentChapter.ChapterId.ToString()))
 				{
 					CurrentRow = i;
 					CurrentColumn = j;
-					break;
+					return;
 				}
 			}
 		}
@@ -136,32 +148,32 @@ public class PrintTree
 		switch (currentChapter.Links.Count)
 		{
 			case 1:
-			{
-				PrintArray[CurrentRow, CurrentColumn] = $" {currentChapter.ChapterId} ";
-				PrintArray[CurrentRow + 1 , CurrentColumn] = " | ";
-				PrintArray[CurrentRow + 2, CurrentColumn] = currentChapter.Links.First().LinkId.ToString();
-				break;	   
-			}			   
-			case 2:		   
-			{
-				PrintArray[CurrentRow, CurrentColumn] = $" {currentChapter.ChapterId} ";
-				PrintArray[CurrentRow + 1, CurrentColumn - 1] = " / ";
-				PrintArray[CurrentRow + 2, CurrentColumn - 2] = $" {currentChapter.Links.ElementAt(0).LinkId.ToString()} ";
-				PrintArray[CurrentRow + 1, CurrentColumn + 1] = " \\ ";
-				PrintArray[CurrentRow + 2, CurrentColumn + 2] = $" {currentChapter.Links.ElementAt(1).LinkId.ToString()} ";
-				break;
-			}
+				{
+					PrintArray[CurrentRow, CurrentColumn] = $" {currentChapter.ChapterId} ";
+					PrintArray[CurrentRow + 1, CurrentColumn] = " | ";
+					PrintArray[CurrentRow + 2, CurrentColumn] = currentChapter.Links.First().LinkId.ToString();
+					break;
+				}
+			case 2:
+				{
+					PrintArray[CurrentRow, CurrentColumn] = $" {currentChapter.ChapterId} ";
+					PrintArray[CurrentRow + 1, CurrentColumn - 1] = " / ";
+					PrintArray[CurrentRow + 2, CurrentColumn - 2] = $" {currentChapter.Links.ElementAt(0).LinkId.ToString()} ";
+					PrintArray[CurrentRow + 1, CurrentColumn + 1] = " \\ ";
+					PrintArray[CurrentRow + 2, CurrentColumn + 2] = $" {currentChapter.Links.ElementAt(1).LinkId.ToString()} ";
+					break;
+				}
 			case 3:
-			{
-				PrintArray[CurrentRow, CurrentColumn] = $" {currentChapter.ChapterId} ";
-				PrintArray[CurrentRow + 1, CurrentColumn - 1] = " / ";
-				PrintArray[CurrentRow + 2, CurrentColumn - 2] = $" {currentChapter.Links.ElementAt(0).LinkId.ToString()} ";
-				PrintArray[CurrentRow + 1, CurrentColumn] = " | ";
-				PrintArray[CurrentRow + 2, CurrentColumn] = $" {currentChapter.Links.ElementAt(1).LinkId.ToString()} ";
-				PrintArray[CurrentRow + 1, CurrentColumn + 1] = " \\ ";
-				PrintArray[CurrentRow + 2, CurrentColumn + 2] = $" {currentChapter.Links.ElementAt(2).LinkId.ToString()} ";
-				break;
-			}
+				{
+					PrintArray[CurrentRow, CurrentColumn] = $" {currentChapter.ChapterId} ";
+					PrintArray[CurrentRow + 1, CurrentColumn - 1] = " / ";
+					PrintArray[CurrentRow + 2, CurrentColumn - 2] = $" {currentChapter.Links.ElementAt(0).LinkId.ToString()} ";
+					PrintArray[CurrentRow + 1, CurrentColumn] = " | ";
+					PrintArray[CurrentRow + 2, CurrentColumn] = $" {currentChapter.Links.ElementAt(1).LinkId.ToString()} ";
+					PrintArray[CurrentRow + 1, CurrentColumn + 1] = " \\ ";
+					PrintArray[CurrentRow + 2, CurrentColumn + 2] = $" {currentChapter.Links.ElementAt(2).LinkId.ToString()} ";
+					break;
+				}
 			default: break;
 		}
 
