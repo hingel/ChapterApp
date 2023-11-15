@@ -1,6 +1,7 @@
 ﻿using ChapterApp.Models;
 using DataAccess;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Services;
 
@@ -33,38 +34,38 @@ public class PrintTree
 		if (bottomChapter == null)
 			return;
 
-		var extraRemove = 1;
-
 		while (PrintedChapters.Count <= MaxValue)
 		{
 			if (!PrintedChapters.Contains(bottomChapter.ChapterId))
 				AddChapterToArray(bottomChapter);
 
+			var checkedNrOfLinks = false;
+			
 			foreach (var link in bottomChapter.Links)
 			{
 				if (PrintedChapters.Contains(link.LinkId))
 				{
-					if (bottomChapter.Links.Count != 1)
+					if (bottomChapter.Links.Count != 1 && !checkedNrOfLinks)
 					{
+						checkedNrOfLinks = true;
 						CurrentColumn += 2;
-						extraRemove = 2;
 					}
 
 					continue;
 				}
-				
+
 				bottomChapter = await FindBottomLeftChapter(link.LinkId);
 				AddChapterToArray(bottomChapter);
 				break;
 			}
-
+			
 			bottomChapter = await _dbContext.Chapters.Include(c => c.Links)
 				.FirstOrDefaultAsync(c => c.Links.Any(l => l.LinkId.Equals(bottomChapter.ChapterId)));
 
-			if (bottomChapter.Links.Count != 1)
-				CurrentColumn += 1;
-
-			CurrentRow -= 2;
+			if (PrintedChapters.Contains(bottomChapter.ChapterId))
+				FindPositionInArray(bottomChapter);
+			else
+				CurrentRow -= 2;
 		}
 
 		await ConsolePrint(PrintArray);
@@ -100,8 +101,30 @@ public class PrintTree
 		return null;
 	}
 
+	private void FindPositionInArray(Chapter currentChapter)
+	{
+		for (int i = 0; i < PrintArray.GetLength(0); i++)
+		{
+			for (int j = 0; j < PrintArray.GetLength(1); j++)
+			{
+
+				Console.WriteLine(PrintArray[i, j]);
+
+				if (string.IsNullOrEmpty(PrintArray[i, j]) ? false : PrintArray[i, j].Contains(currentChapter.ChapterId.ToString()))
+				{
+					CurrentRow = i;
+					CurrentColumn = j;
+					break;
+				}
+			}
+		}
+	}
+
 	private void AddChapterToArray(Chapter currentChapter)
 	{
+		if (PrintedChapters.Contains(currentChapter.ChapterId))
+			return;
+
 		PrintedChapters.Add(currentChapter.ChapterId);
 
 		if (CurrentColumn <= 0)
