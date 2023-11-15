@@ -20,7 +20,7 @@ public class PrintTree
 	public string[,] PrintArray { get; private set; }
 	public int CurrentRow { get; private set; } = 0;
 	public int CurrentColumn { get; private set; } = 0;
-	public HashSet<int> PrintedChapters { get; } = new();
+	public HashSet<int> PrintedChapters { get; } = new ();
 	public int MaxValue { get; private set; }
 
 	public async Task PrintTreeMethod()
