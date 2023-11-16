@@ -1,6 +1,7 @@
 ﻿using ChapterApp.Models;
 using DataAccess;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Services;
 
@@ -33,7 +34,7 @@ public class ChapterTracker
 
 			if (currentChapter.Links.Count < 1)
 			{
-				Console.WriteLine("Enter possible ways forward, separate by ','.");
+				Console.WriteLine("Enter possible ways forward, separate by ','. Or press Enter to add Note to Chapter:");
 				var linksToAdd = Extensions.InputCheck(currentChapter.ChapterId);
 
 				if (linksToAdd[0] == 0)
@@ -54,6 +55,11 @@ public class ChapterTracker
 			var toGoto = Extensions.InputCheck(currentChapter.ChapterId).First();
 			if (toGoto == 0)
 				break;
+
+			Console.WriteLine($"Do you want to add a note to chapter {currentChapter.ChapterId}? Enter text or leave empty. Press enter to continue");
+
+			var noteText = Console.ReadLine();
+			_ = noteText.IsNullOrEmpty() ? currentChapter.Note.Text = string.Empty : currentChapter.Note.Text = noteText!;
 
 			AddLinkToChapter(currentChapter, toGoto);
 

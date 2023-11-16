@@ -31,9 +31,9 @@ static async Task ChapterApp(IServiceProvider hostProvider)
 
 	var test = provider.GetRequiredService<ApplicationDbContext>();
 	
-	//await chapterTracker.RunChapterTracker();
+	await chapterTracker.RunChapterTracker();
 
-	await printTree.PrintTreeMethod();
+	//await printTree.PrintTreeMethod();
 
 
 	//TODO:Skapa en migrering om det inte finns en databas, automatiskt.
