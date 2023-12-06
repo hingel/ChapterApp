@@ -9,10 +9,15 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options => 
 	options.UseSqlServer("Data source=DESKTOP-T52SIII;Database=ChapterApp;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False"));
 
+
+
 builder.Services.AddScoped<PrintTree>();
 builder.Services.AddScoped<ChapterTracker>();
 
+
 using var host = builder.Build();
+
+//var result = await MigrateDataBase(host.Services);
 
 await ChapterApp(host.Services);
 await host.RunAsync();
@@ -23,18 +28,30 @@ static async Task ChapterApp(IServiceProvider hostProvider)
 {
 	using var serviceScope = hostProvider.CreateScope();
 	
+	
 	//var chapters = await JsonDataAccess.ReadData<Chapter>("chapters.json");
 
 	var provider = serviceScope.ServiceProvider;
 	var chapterTracker = provider.GetRequiredService<ChapterTracker>();
 	var printTree = provider.GetRequiredService<PrintTree>();
-
-	var test = provider.GetRequiredService<ApplicationDbContext>();
 	
 	await chapterTracker.RunChapterTracker();
 
-	//await printTree.PrintTreeMethod();
-
-
-	//TODO:Skapa en migrering om det inte finns en databas, automatiskt.
+	await printTree.PrintTreeMethod();
 }
+
+//static async Task<bool> MigrateDataBase(IServiceProvider hostProvider)
+//{
+//	using var serviceScope = hostProvider.CreateScope();
+
+//	try
+//	{
+//		await using var dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+//		await dbContext.Database.MigrateAsync();
+//		return true;
+//	}
+//	catch
+//	{
+//		return false;
+//	}
+//}

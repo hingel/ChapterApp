@@ -10,7 +10,7 @@ public class Chapter
 		var toReturn = string.Format("Chapters to go to: " + (Links.Count > 0
 			? Links
 				.Select(c => c.LinkId.ToString())
-				.Aggregate((link, link2) => $"{link}, {link2}") : ".") + $"Note: {Note.Text}");
+				.Aggregate((link, link2) => $"{link}, {link2}") : ".") + $" Note: {Note.Text}");
 		return toReturn;
 	}
 }

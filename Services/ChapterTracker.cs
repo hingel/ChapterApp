@@ -30,26 +30,26 @@ public class ChapterTracker
 
 		do
 		{
-			Console.WriteLine($"Current Chapter: {currentChapter.ChapterId}.");
+			//Console.WriteLine($"Current Chapter: {currentChapter.ChapterId}.");
 
-			if (currentChapter.Links.Count < 1)
-			{
-				Console.WriteLine("Enter possible ways forward, separate by ','. Or press Enter to add Note to Chapter:");
-				var linksToAdd = Extensions.InputCheck(currentChapter.ChapterId);
+			//if (currentChapter.Links.Count < 1)
+			//{
+			//	Console.WriteLine("Enter possible ways forward, separate by ','. Or press Enter to add Note to Chapter:");
+			//	var linksToAdd = Extensions.InputCheck(currentChapter.ChapterId);
 
-				if (linksToAdd[0] == 0)
-					break;
+			//	if (linksToAdd[0] == 0)
+			//		break;
 
-				foreach (var linkInt in linksToAdd)
-				{
-					AddLinkToChapter(currentChapter, linkInt);
-				}
+			//	foreach (var linkInt in linksToAdd)
+			//	{
+			//		AddLinkToChapter(currentChapter, linkInt);
+			//	}
 
-				if (!_dbContext.Chapters.Any(c => c.ChapterId == currentChapter.ChapterId))
-					_dbContext.Chapters.Add(currentChapter);
+			//	if (!_dbContext.Chapters.Any(c => c.ChapterId == currentChapter.ChapterId))
+			//		_dbContext.Chapters.Add(currentChapter);
 
-				_dbContext.SaveChanges(); //Behövs denna ,testa att flytta till slutet?
-			}
+			//	_dbContext.SaveChanges();
+			//}
 
 			Console.WriteLine($"Where do you want to continue to? {currentChapter}");
 			var toGoto = Extensions.InputCheck(currentChapter.ChapterId).First();
@@ -67,7 +67,7 @@ public class ChapterTracker
 			currentChapter = _dbContext.Chapters.Include(c => c.Links).FirstOrDefault(c => c.ChapterId == toGoto);
 			currentChapter ??= new Chapter { ChapterId = toGoto };
 
-			_dbContext.SaveChanges();
+			await _dbContext.SaveChangesAsync();
 
 			chapterNrList.Add(currentChapter.ChapterId);
 			Extensions.PrintChapterList(chapterNrList);
@@ -81,14 +81,14 @@ public class ChapterTracker
 
 		void AddLinkToChapter(Chapter chapter, int i)
 		{
-			if (chapter.Links.All(c => c.LinkId != i) && _dbContext.Links.Any(c => c.LinkId == i))
+			if (chapter.Links!.All(c => c.LinkId != i) && _dbContext.Links.Any(c => c.LinkId == i))
 			{
-				chapter.Links.Add(_dbContext.Links.First(c => c.LinkId == i));
+				chapter.Links!.Add(_dbContext.Links.First(c => c.LinkId == i));
 			}
 
 			else if (_dbContext.Links.All(c => c.LinkId != i))
 			{
-				chapter.Links.Add(new ChapterLink { LinkId = i });
+				chapter.Links!.Add(new ChapterLink { LinkId = i });
 			}
 		}
 	}

@@ -3,11 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChapterApp", "ChapterApp\ChapterApp.csproj", "{90540F9A-C8FF-48C5-920C-072EF457EBBA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChapterApp", "ChapterApp\ChapterApp.csproj", "{90540F9A-C8FF-48C5-920C-072EF457EBBA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess", "DataAccess\DataAccess.csproj", "{F9B00EBC-E8D6-453E-8502-FD88BABBD6D7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataAccess", "DataAccess\DataAccess.csproj", "{F9B00EBC-E8D6-453E-8502-FD88BABBD6D7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Services", "Services\Services.csproj", "{770A45F4-0276-4631-8739-46C4C8EB0F70}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChapterAppWpf", "ChapterAppWpf\ChapterAppWpf.csproj", "{9EA7ED07-3F69-4EA8-A895-7451BFF9F9C1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{770A45F4-0276-4631-8739-46C4C8EB0F70}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{770A45F4-0276-4631-8739-46C4C8EB0F70}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{770A45F4-0276-4631-8739-46C4C8EB0F70}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9EA7ED07-3F69-4EA8-A895-7451BFF9F9C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9EA7ED07-3F69-4EA8-A895-7451BFF9F9C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9EA7ED07-3F69-4EA8-A895-7451BFF9F9C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9EA7ED07-3F69-4EA8-A895-7451BFF9F9C1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

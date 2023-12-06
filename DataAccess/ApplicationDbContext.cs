@@ -1,5 +1,6 @@
 ﻿using ChapterApp.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace DataAccess;
 
@@ -8,8 +9,14 @@ public class ApplicationDbContext : DbContext
 	public DbSet<Chapter> Chapters { get; set; } = null!;
 	public DbSet<ChapterLink> Links { get; set; } = null!;
 
-	public ApplicationDbContext(DbContextOptions options) : base(options)
+	public ApplicationDbContext() //DbContextOptions options) : base(options)
 	{
+	}
+
+	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+	{
+		optionsBuilder.UseSqlServer("Data source=DESKTOP-T52SIII;Database=ChapterApp;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+
 	}
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
