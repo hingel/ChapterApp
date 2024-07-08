@@ -3,7 +3,7 @@
 public class Chapter
 {
 	public int ChapterId { get; set; }
-	public virtual ICollection<ChapterLink>? Links { get; set; } = new HashSet<ChapterLink>();
+	public virtual ICollection<ChapterLink> Links { get; set; } = new HashSet<ChapterLink>();
 	public ChapterNote Note { get; set; } = new ();
 	public override string ToString()
 	{
@@ -22,5 +22,5 @@ public class ChapterLink
 
 public class ChapterNote
 {
-	public string Text { get; set; }
+	public string Text { get; set; } = string.Empty;
 }

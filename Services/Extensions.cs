@@ -16,28 +16,11 @@ public static class Extensions
 		Console.WriteLine();
 	}
 
-	public static int[] InputCheck(int notValidInt)
+	public static int[]? InputCheck(int notValidInt)
 	{
-		var stringArr = Console.ReadLine().Replace(" ", "").Split(',').ToArray();
-		var intArr = new List<int>();
+		var stringArr = Console.ReadLine()!.Replace(" ", "").Split(',').ToArray(); //Ersätt med regex
 
-		foreach (var s in stringArr)
-		{
-			bool loop = true;
-
-			while (loop)
-			{
-				loop = int.TryParse(s, out var testInt);
-
-				if (loop && notValidInt != testInt)
-				{
-					intArr.Add(testInt);
-					break;
-				}
-				
-				Console.WriteLine("Enter a valid number");
-			}
-		}
+		var intArr = stringArr.Where(s => int.TryParse(s, out var testInt) && testInt != notValidInt).Select(int.Parse);
 
 		return intArr.ToArray();
 	}
