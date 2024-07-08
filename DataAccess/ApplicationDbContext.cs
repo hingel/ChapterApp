@@ -1,4 +1,5 @@
 ﻿using ChapterApp.Models;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess;
